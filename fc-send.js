@@ -188,7 +188,16 @@
               U.clear(testOut).appendChild(U.note('It works', 'A test row landed at row ' + d.row + '. Open the sheet and delete it.', 'good'));
             }).catch(function (err) {
               b.disabled = false; b.textContent = 'Send a test row';
-              U.clear(testOut).appendChild(U.note('No connection', String(err.message || err) + ' Check the deployment is set to Execute as Me and Who has access Anyone.', 'warn'));
+              var msg = String(err.message || err);
+              if (err.answered) {
+                /* Reached the script and got a real answer back. */
+                var tip = /secret/i.test(msg)
+                  ? 'The URL is right and the script is running. The pass phrase here does not match the SECRET line in the script. Two things to check. First, that you actually changed SECRET in the script and saved it. Second, and this is the one that catches people, Apps Script keeps serving the version you deployed, not the code you just saved. After editing SECRET go to Deploy, Manage deployments, hit the pencil, set Version to New version, then Deploy.'
+                  : 'The script is running and it answered. Fix what it said above and try again.';
+                U.clear(testOut).appendChild(U.note('The script answered and said no', msg + ' ' + tip, 'warn'));
+              } else {
+                U.clear(testOut).appendChild(U.note('Could not reach the job log', msg + ' Check the URL ends in /exec, and that the deployment is set to Execute as Me and Who has access Anyone.', 'warn'));
+              }
             });
           }
         })

@@ -162,7 +162,14 @@
       }).then(function (t) {
         var d = {};
         try { d = JSON.parse(t); } catch (e) { throw new Error('The job log replied with something unreadable. Check the deployment is set to Anyone.'); }
-        if (!d.ok) throw new Error(d.error || 'The job log refused the row.');
+        if (!d.ok) {
+          /* The script answered. The connection is fine and saying otherwise
+             sends the user off checking deployment settings that are already
+             correct. Mark it so the screen can say what actually happened. */
+          var e2 = new Error(d.error || 'The job log refused the row.');
+          e2.answered = true;
+          throw e2;
+        }
         return d;
       });
     }
