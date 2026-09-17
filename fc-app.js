@@ -59,9 +59,19 @@
       el('strong', { text: title }),
       sub ? el('small', { text: sub }) : null
     ]));
+    /* Three honest states, not two. Nothing to save yet is not the same thing
+       as work that failed to save, and the old badge said Not saved on a fresh
+       boot with perfectly good storage, which reads as a warning. */
     var s = FC.state.lastSaved;
-    top.appendChild(el('div', { class: 'savedot' + (s ? '' : ' stale') }, [
-      el('i'), el('span', { text: s ? 'Saved' : 'Not saved' })
+    var tier = FC.state.tier || {};
+    var nothingYet = !s && !(FC.state.jobs || []).length;
+    var txt = s ? 'Saved' : (nothingYet ? (tier.durable ? 'Ready' : 'This tab only') : 'Not saved');
+    var warn = !s && !nothingYet;
+    top.appendChild(el('div', {
+      class: 'savedot' + (warn || (nothingYet && !tier.durable) ? ' stale' : ''),
+      title: tier.label || ''
+    }, [
+      el('i'), el('span', { text: txt })
     ]));
   }
 

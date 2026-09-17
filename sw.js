@@ -3,7 +3,7 @@
    Cache the shell on install, serve it from cache first, and quietly refresh
    it in the background when there is a connection. Job data never goes near
    this cache. It lives on the device, handled by fc-disk.js. */
-var CACHE = 'fieldcalc-v2-0-0';
+var CACHE = 'fieldcalc-v2-0-1';
 var SHELL = [
   './', './index.html', './app.css',
   './engine.js', './fc-disk.js', './fc-store.js', './fc-gates.js',
