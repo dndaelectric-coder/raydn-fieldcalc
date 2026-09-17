@@ -348,7 +348,14 @@
 
     save: function () {
       try {
+        /* Stamp the time BEFORE the snapshot, not after. The old order copied
+           the state first and set lastSaved on the live object afterwards, so
+           what actually went to disk carried the previous stamp, and the very
+           first save wrote null. Settings then read Not yet on a phone that had
+           just saved the job perfectly well. */
+        var stamp = nowISO();
         var slim = JSON.parse(JSON.stringify(this.state));
+        slim.lastSaved = stamp;
         delete slim.photoLoss; delete slim.tier;
         slim.jobs.forEach(function (j) {
           Object.keys(j.photos || {}).forEach(function (k) {
@@ -358,7 +365,7 @@
         });
         var ok = global.FCDisk ? global.FCDisk.saveState(slim)
                                : (global.name = 'RAYDN_FIELDCALC::' + JSON.stringify(slim), true);
-        this.state.lastSaved = ok ? nowISO() : this.state.lastSaved;
+        this.state.lastSaved = ok ? stamp : this.state.lastSaved;
         if (this.onSave) this.onSave(ok ? null : new Error('Nothing could be saved on this phone.'));
       } catch (e) { if (this.onSave) this.onSave(e); }
     },
