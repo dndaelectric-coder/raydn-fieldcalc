@@ -33,6 +33,22 @@ Nothing says code compliant until a Master Electrician has completed the review
 inside the app. A missing value never silently becomes zero. It becomes a
 visible Unknown, and it blocks the gate until somebody resolves it.
 
+## Live load check
+
+The fast lane for a site visit. Pick the main breaker, type the house size and
+where it came from, answer the basement and the heating, then tap in each 240 V
+load off its nameplate. The number moves as you type: today, after the job, and
+with the maybe later loads, against the main breaker. Each load shows the amps
+it adds to the calculation.
+
+For the Master Electrician it lays the options side by side on the same engine:
+a load manager under Rule 8-106 11), a charger setting under Alberta STANDATA
+24-ECI-086, a heat and cooling interlock under Rule 8-106 3), a bigger service,
+panel spaces, and the solar breaker check under Rule 64-112 4). Nothing there is
+a recommendation. A customer view and a plain summary carry the preliminary
+notice. While a reading is missing the result says at least and names what is
+missing, because a blank is never allowed to pass as a finished number.
+
 ## How the data works
 
 Everything stays on the device. Jobs and photos are written to the phone's own
@@ -58,15 +74,24 @@ python3 -m http.server 8811
 
 Then open `http://localhost:8811/index.html`.
 
+## Preview build
+
+The next version can sit at `/next/` while the crew keeps working in the main
+app. The preview keeps its own jobs and its own Settings, so nothing in the main
+app gets touched, and the main app never loads the preview's files. Jobs made in
+the preview stay in the preview. Once the preview becomes the main app, move any
+job worth keeping across with the job file and Import a job file.
+
 ## Tests
 
 ```
 node audit/reference.js    # the standing reference case, must never move
 node audit/holes2.js       # thirteen logic tests, each one a real defect found by running it
+node audit/check.js        # the Live load check: scenarios, options, the at least floor, customer text
 ```
 
-The reference case is the Carson Knittig job, 30 Westwyck Link, Spruce Grove.
-The hand calculation and the engine have to agree at 25,250 W and 105.2 A on a
+The reference case is a real Spruce Grove service upgrade. The hand
+calculation and the engine have to agree at 25,250 W and 105.2 A on a
 299.6 m2 living area. If that test fails, the engine moved and something is
 wrong.
 

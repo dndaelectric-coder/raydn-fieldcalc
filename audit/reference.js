@@ -1,8 +1,8 @@
 /* The standing reference test. This is the one that must never move.
  *
- * Carson Knittig, 30 Westwyck Link, Spruce Grove. The hand calculation is in
- * skills/user/raydn-200a-service-upgrade/references/load-calc.md under "Worked
- * example, Carson Knittig". The engine matched it exactly when it was built and
+ * Reference house, a real Spruce Grove service upgrade. The hand calculation
+ * is the worked example in the raydn-200a-service-upgrade skill, load-calc.md.
+ * The engine matched it exactly when it was built and
  * it has to keep matching it, because everything else in FieldCalc is a wrapper
  * around this number.
  *
@@ -20,10 +20,10 @@ var EXPECT = {
 };
 var TOL = { areaM2: 0.15, totalW: 1, amps: 0.05, runway: 0.05 };
 
-function carson() {
+function refHouse() {
   var j = FC.blankJob('master');
-  j.header.customer = 'Carson Knittig';
-  j.header.address = '30 Westwyck Link, Spruce Grove';
+  j.header.customer = 'Reference house';
+  j.header.address = 'Spruce Grove';
   j.juris.authority = 'City of Spruce Grove';
   j.juris.utility = 'FortisAlberta';
 
@@ -63,11 +63,11 @@ function check(label, got, want, tol) {
     '   expected ' + want);
 }
 
-var j = carson();
+var j = refHouse();
 var inp = G.toEngine(j);
 var r = calculate(inp);
 
-console.log('Reference case, Carson Knittig, Rule 8-200 single dwelling');
+console.log('Reference case, Rule 8-200 single dwelling');
 console.log('---------------------------------------------------------');
 check('Living area, Rule 8-110, m2', Number(r.areaM2 !== undefined ? r.areaM2.toFixed(1) : (inp.areaAbove + inp.areaBelow * 0.75) * 0.092903), EXPECT.areaM2, TOL.areaM2);
 check('Calculated load, W', Math.round(r.totalW), EXPECT.totalW, TOL.totalW);
@@ -78,12 +78,12 @@ check('Calculated load, A', Number(r.amps.toFixed(1)), EXPECT.amps, TOL.amps);
 check('Rule 8-106 8) peak, W, unfilled', inp.measuredPeakW, 0, 0);
 check('Additional loads, W', inp.newLoadsW, 9600, 0);
 
-var j2 = carson();
+var j2 = refHouse();
 j2.service.measured = { value: '14', unit: 'kW', source: 'Fortis interval data', window: 'September 2025 to August 2026' };
 var inp2 = G.toEngine(j2);
 check('Rule 8-106 8) peak, W, filled', inp2.measuredPeakW, 14000, 0);
 
-var j3 = carson();
+var j3 = refHouse();
 j3.service.measured = { value: '14', unit: 'kW', source: '', window: '' };
 check('Rule 8-106 8) with no source', G.toEngine(j3).measuredPeakW, 0, 0);
 

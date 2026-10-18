@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Raydn CEC 2024 Load Calculator</title>
+<meta name="description" content="Interactive CSA C22.1:24 Section 8 load calculator built to Alberta STANDATA 24-ECB-008. Single dwellings, apartments, schools, hospitals, hotels and Table 14 occupancies.">
+<meta name="theme-color" content="#0d1b2e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark" aria-hidden="true">R</span>
+    <span class="brandtext">
+      <strong>Raydn Renewables</strong>
+      <small>CEC 2024 Load Calculator</small>
+    </span>
+  </div>
+  <div class="topmeta">
+    <a class="pill" href="../#/home" style="text-decoration:none">Back to FieldCalc</a>
+    <span class="pill">CSA C22.1:24</span>
+    <span class="pill">Alberta STANDATA 24-ECB-008</span>
+  </div>
+</header>
+
+<main class="shell">
+
+  <!-- ============ FORM ============ -->
+  <form id="form" class="panel" autocomplete="off">
+
+    <section class="card">
+      <h2>Job information</h2>
+      <div class="grid two">
+        <label>Customer or project
+          <input type="text" name="customer" placeholder="Name">
+        </label>
+        <label>Civic address
+          <input type="text" name="address" placeholder="Street, town, Alberta">
+        </label>
+        <label>Permit authority
+          <input type="text" name="authority" placeholder="Municipality or accredited agency">
+        </label>
+        <label>Wire owner
+          <input type="text" name="utility" placeholder="EPCOR, FortisAlberta, other">
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Occupancy and system</h2>
+      <div class="grid two">
+        <label>Occupancy type
+          <select name="occupancy" id="occupancy">
+            <optgroup label="Residential">
+              <option value="single">Single dwelling, Rule 8-200</option>
+              <option value="apt-unit">One dwelling unit in an apartment, Rule 8-202 1)</option>
+              <option value="apt-building">Apartment building main service, Rule 8-202 3)</option>
+            </optgroup>
+            <optgroup label="Institutional and commercial">
+              <option value="school">School, Rule 8-204</option>
+              <option value="hospital">Hospital, Rule 8-206</option>
+              <option value="hotel">Hotel, motel or dormitory, Rule 8-208</option>
+              <option value="other">Other occupancy, Rule 8-210 and Table 14</option>
+            </optgroup>
+          </select>
+        </label>
+        <label>System voltage
+          <select name="system" id="system"></select>
+          <span class="hint" id="systemHint"></span>
+        </label>
+        <label>Existing or proposed service rating
+          <div class="withunit">
+            <input type="number" name="serviceA" value="100" min="0" step="1">
+            <span>A</span>
+          </div>
+          <span class="hint">Rule 8-104 1), the lesser of the overcurrent device rating and the conductor ampacity.</span>
+        </label>
+        <label id="wrapSpares">Panel spaces left free
+          <input type="number" name="panelSpacesFree" min="0" step="1" placeholder="count">
+          <span class="hint">Rule 8-108, four spare spaces in a single dwelling, two in an apartment unit.</span>
+        </label>
+        <label id="wrapTarget" class="hidden">Conductors being sized
+          <select name="conductorTarget">
+            <option value="service">Service conductors or cables</option>
+            <option value="feeder">Feeder</option>
+          </select>
+          <span class="hint">Table 14 carries a different demand factor for each.</span>
+        </label>
+        <label id="wrapTable14" class="hidden">Table 14 occupancy
+          <select name="table14Key" id="table14Key"></select>
+        </label>
+      </div>
+    </section>
+
+    <!-- General lighting basis -->
+    <section class="card">
+      <h2>General lighting and area</h2>
+      <div class="unitToggle">
+        <span>Area units</span>
+        <label class="radio"><input type="radio" name="areaUnit" value="sqft" checked> sq ft</label>
+        <label class="radio"><input type="radio" name="areaUnit" value="m2"> m2</label>
+      </div>
+
+      <div class="grid two" id="dwellingArea">
+        <label>Ground floor plus upper living area
+          <input type="number" name="areaAbove" min="0" step="1" placeholder="0">
+          <span class="hint">Rule 8-110 a) and b), inside dimensions, 100 percent.</span>
+        </label>
+        <label>Below grade area
+          <input type="number" name="areaBelow" min="0" step="1" placeholder="0">
+          <span class="hint">Rule 8-110 c), counted at 75 percent. Finished or bare OSB, it still counts.</span>
+        </label>
+        <label>Below grade ceiling height
+          <div class="withunit">
+            <input type="number" name="belowCeilingM" min="0" step="0.05" placeholder="2.4">
+            <span>m</span>
+          </div>
+          <span class="hint">Measured to the lowest part of the ceiling assembly. Over 1.8 m and it counts.</span>
+        </label>
+        <label id="wrapExcl">Floor area excluding basement
+          <input type="number" name="areaExclBasement" min="0" step="1" placeholder="0">
+          <span class="hint">Rule 8-200 1) b). 80 m2 or more sets a 24 000 W minimum, under it the minimum is 14 400 W.</span>
+        </label>
+      </div>
+
+      <div class="grid two hidden" id="buildingArea">
+        <label>Total building area, outside dimensions
+          <input type="number" name="buildingArea" min="0" step="1" placeholder="0">
+        </label>
+        <label id="wrapClassroom" class="hidden">Classroom area
+          <input type="number" name="classroomArea" min="0" step="1" placeholder="0">
+          <span class="hint">Rule 8-204 1) a), 50 W/m2. The remainder is taken at 10 W/m2.</span>
+        </label>
+        <label id="wrapHighIntensity" class="hidden">High intensity area, operating rooms
+          <input type="number" name="highIntensityArea" min="0" step="1" placeholder="0">
+          <span class="hint">Rule 8-206 1) b), 100 W/m2.</span>
+        </label>
+        <label id="wrapSpecialLighting" class="hidden">Special area lighting, ballrooms
+          <div class="withunit"><input type="number" name="specialLightingW" min="0" step="10" placeholder="0"><span>W</span></div>
+          <span class="hint">Rule 8-208 1) b), rating of the equipment installed.</span>
+        </label>
+        <label id="wrapShowWindow" class="hidden">Show window length
+          <div class="withunit"><input type="number" name="showWindowM" min="0" step="0.1" placeholder="0"><span>m</span></div>
+          <span class="hint">Rule 8-212 2), not less than 650 W/m along the base of the window.</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- HVAC -->
+    <section class="card">
+      <h2>HVAC</h2>
+      <div class="grid two">
+        <label>Connected electric space heating
+          <div class="withunit"><input type="number" name="heatW" min="0" step="100" placeholder="0"><span>W</span></div>
+        </label>
+        <label>Heating demand basis
+          <select name="heatMode">
+            <option value="thermostat">Thermostat in each room or heated area, 62-118 3)</option>
+            <option value="furnace">Electric furnace, duct heater or thermal storage, 62-118 4)</option>
+            <option value="full">No thermostatic control, full connected rating</option>
+          </select>
+          <span class="hint">62-118 3) is first 10 kW at 100 percent then 75 percent. A furnace is 100 percent, no relief.</span>
+        </label>
+        <label>Air conditioning or heat pump
+          <div class="withunit"><input type="number" name="coolW" min="0" step="100" placeholder="0"><span>W</span></div>
+          <span class="hint">Demand factor 100 percent.</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="interlock">
+          <span>An interlock is installed to prevent heating and cooling running together</span>
+          <span class="hint">Rule 8-106 3). No interlock means both loads count in full. Do not tick this to make the number work.</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Range and appliances -->
+    <section class="card" id="cardRange">
+      <h2>Range</h2>
+      <label>Electric range nameplate
+        <div class="withunit"><input type="number" name="rangeW" min="0" step="100" placeholder="0"><span>W</span></div>
+        <span class="hint">6000 W for a single range plus 40 percent of the amount over 12 kW. Leave at zero for gas or induction cooktop only, which changes how every other load is counted.</span>
+      </label>
+    </section>
+
+    <section class="card">
+      <h2 id="applianceHeading">Heavy appliances and permanently connected loads</h2>
+      <p class="lede" id="applianceLede">Enter the nameplate rating of each load. Alberta STANDATA 24-ECB-008 requires the nameplate rating of each load over 1500 W to be used, and it puts a domestic hot water storage tank heater in the other loads group, not in the tankless group.</p>
+      <div id="applianceRows" class="rows"></div>
+      <button type="button" class="ghost" data-add="appliance">Add a load</button>
+      <div class="quickadd" id="quickAdd"></div>
+    </section>
+
+    <!-- EVSE -->
+    <section class="card">
+      <h2>Electric vehicle supply equipment</h2>
+      <div id="evseRows" class="rows"></div>
+      <button type="button" class="ghost" data-add="evse">Add a charger</button>
+      <div class="grid two" style="margin-top:14px">
+        <label>Energy management
+          <select name="evemsMode" id="evemsMode">
+            <option value="none">No EVEMS, count at the maximum setting</option>
+            <option value="setpoint">EVEMS installed, Rule 8-106 10), count at the system setpoint</option>
+            <option value="exempt">EVEMS monitoring service, feeders and branch circuits, Rule 8-106 11), not counted</option>
+          </select>
+        </label>
+        <label id="wrapSetpoint" class="hidden">EVEMS maximum allowed load
+          <div class="withunit"><input type="number" name="evemsSetpointW" min="0" step="100" placeholder="0"><span>W</span></div>
+        </label>
+      </div>
+      <p class="note">Alberta STANDATA 24-ECI-086 requires the maximum adjustable setting in the calculation. A lower setting can count only where the charger has a manual switch inside the equipment and an electrician has to set it. A charger a customer can turn back up to 48 A gets counted at 48 A. EVEMS controls demand, it does not create service capacity.</p>
+    </section>
+
+    <!-- Apartment building -->
+    <section class="card hidden" id="cardApartment">
+      <h2>Apartment building</h2>
+      <p class="lede">The unit inputs above describe one typical dwelling unit. Rule 8-202 3) a) applies the diversity ladder to the unit loads with EVSE, space heating and air conditioning taken out first.</p>
+      <div class="grid two">
+        <label>Number of dwelling units
+          <input type="number" name="unitCount" min="1" step="1" value="1">
+        </label>
+        <label>Common area and non dwelling load
+          <div class="withunit"><input type="number" name="nonDwellingW" min="0" step="100" placeholder="0"><span>W</span></div>
+          <span class="hint">Rule 8-202 3) e), 75 percent demand factor.</span>
+        </label>
+        <label>Common area EVSE not fed from a unit panel
+          <div class="withunit"><input type="number" name="evCommonW" min="0" step="100" placeholder="0"><span>W</span></div>
+          <span class="hint">Rule 8-202 3) d), 100 percent.</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Branch circuits and block heaters -->
+    <section class="card">
+      <h2>Branch circuits</h2>
+      <div class="grid two">
+        <label>Vehicle heater receptacle stalls
+          <input type="number" name="stallCount" min="0" step="1" placeholder="0">
+          <span class="hint">Rule 8-400. Calculated separately with its own demand factor and then added, per STANDATA 24-ECB-008.</span>
+        </label>
+        <label>Stall circuit rating
+          <select name="stallCircuit">
+            <option value="15">15 A</option>
+            <option value="20">20 A</option>
+          </select>
+        </label>
+        <label>Stall loading
+          <select name="stallControlled">
+            <option value="no">Not restricted or controlled, 8-400 3)</option>
+            <option value="yes">Restricted or controlled, 8-400 4)</option>
+          </select>
+        </label>
+        <label id="wrapCord" class="hidden">Cord connected equipment over 125 V or 20 A
+          <div class="withunit"><input type="number" name="cordConnectedW" min="0" step="100" placeholder="0"><span>W</span></div>
+          <span class="hint">80 percent of the receptacle rating, or the rating of the equipment intended for connection.</span>
+        </label>
+      </div>
+      <p class="note">Rule 8-304 sets the maximum number of outlets per circuit and Rule 8-104 2) says the calculated load in a circuit shall not exceed the ampere rating of the circuit. Branch circuit counts do not add to the service calculation on their own, the loads above are what the service is sized on.</p>
+    </section>
+
+    <!-- 8-106 8) -->
+    <section class="card">
+      <h2>Measured demand alternative, Rule 8-106 8)</h2>
+      <p class="lede">Where loads are being added to an existing service, the augmented load may be calculated from the measured maximum demand over the most recent 12 months plus the new loads. Run it alongside the full calculation. When the two disagree, the disagreement is the conversation with the customer.</p>
+      <div class="grid two">
+        <label>Measured 12 month peak demand
+          <div class="withunit"><input type="number" name="measuredPeakW" min="0" step="100" placeholder="0"><span>W</span></div>
+        </label>
+        <label>New loads being added
+          <div class="withunit"><input type="number" name="newLoadsW" min="0" step="100" placeholder="0"><span>W</span></div>
+        </label>
+      </div>
+    </section>
+
+    <!-- Runway -->
+    <section class="card">
+      <h2>Future load runway</h2>
+      <p class="lede">Optional. Add the loads the customer is likely to get to, in the order they are likely to arrive. This shows them where they run out without anybody being told what to buy.</p>
+      <div id="runwayRows" class="rows"></div>
+      <button type="button" class="ghost" data-add="runway">Add a future load</button>
+    </section>
+
+    <div class="formactions">
+      <button type="button" class="ghost" id="resetBtn">Clear all</button>
+      <button type="button" class="ghost" id="demoBtn">Load a worked example</button>
+    </div>
+  </form>
+
+  <!-- ============ RESULTS ============ -->
+  <aside class="panel results" id="results">
+    <div class="verdictbox" id="verdictBox">
+      <span class="vlabel" id="vLabel">Enter a load</span>
+      <div class="vnums">
+        <div><strong id="vAmps">0.0</strong><span>A calculated</span></div>
+        <div><strong id="vService">0</strong><span>A service</span></div>
+      </div>
+      <div class="meter"><div class="fill" id="vFill"></div></div>
+      <p class="vnote" id="vNote"></p>
+    </div>
+
+    <div class="summary">
+      <div class="srow"><span>Calculation basis</span><strong id="sBasis">Rule 8-200</strong></div>
+      <div class="srow"><span>Total calculated load</span><strong id="sWatts">0 W</strong></div>
+      <div class="srow"><span>Voltage divisor</span><strong id="sDiv">240 V</strong></div>
+      <div class="srow"><span>Headroom</span><strong id="sHead">0.0 A</strong></div>
+      <div class="srow" id="sMinRow"><span>Minimum service that clears</span><strong id="sMin">100 A</strong></div>
+    </div>
+
+    <div id="liveLines" class="livelines"></div>
+    <div id="liveFlags" class="flags"></div>
+
+    <div class="resultactions">
+      <button type="button" id="printBtn" class="primary">Print the load calculation report</button>
+      <button type="button" id="copyBtn" class="ghost">Copy the summary</button>
+    </div>
+    <p class="disclaim">Sized on the Code, not on the existing breaker. Bus rating is not demand approval. The inspector decides on the day.</p>
+  </aside>
+</main>
+
+<!-- ============ PRINTABLE REPORT ============ -->
+<section id="report" class="report" aria-hidden="true"></section>
+
+<script src="../engine.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>
