@@ -11,14 +11,14 @@
  * Run: node audit/check.js     Exit code 1 means a case moved.
  */
 var path = require('path');
-var { FC, G } = require(path.join(__dirname, 'shim.js'));
+var { FC, G, P } = require(path.join(__dirname, 'shim.js'));
 
 /* fc-check.js needs a UI object and a window listener at load time only. */
 var fs = require('fs');
 global.UI = { el: function () { return {}; } };
 global.addEventListener = function () {};
 global.App = { go: function () {} };
-new Function('window', 'document', 'navigator', fs.readFileSync('/home/user/workspace/loadcalc/fc-check.js', 'utf8'))(global, global.document, global.navigator);
+new Function('window', 'document', 'navigator', fs.readFileSync(P + 'fc-check.js', 'utf8'))(global, global.document, global.navigator);
 var CK = global.FCCheck;
 
 var fails = [], passes = 0;

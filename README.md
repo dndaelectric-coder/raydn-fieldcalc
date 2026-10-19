@@ -86,9 +86,12 @@ job worth keeping across with the job file and Import a job file.
 
 ```
 node audit/reference.js    # the standing reference case, must never move
-node audit/holes2.js       # thirteen logic tests, each one a real defect found by running it
+node audit/holes2.js       # twelve logic probes, each one a real defect found by running it
 node audit/check.js        # the Live load check: scenarios, options, the at least floor, customer text
+FC_APP=next node audit/check.js   # the same checks against the preview copy
 ```
+
+The tests find the app in the folder above `audit/`, or wherever `FC_APP` points.
 
 The reference case is a real Spruce Grove service upgrade. The hand
 calculation and the engine have to agree at 25,250 W and 105.2 A on a
